@@ -1,0 +1,51 @@
+version: '3'
+services:
+  userservice:
+    build:
+      context: userservice
+      dockerfile: Dockerfile
+    image: profile/userservice
+    hostname: userservice
+    container_name: userservice
+    ports:
+      - "8081:8080"
+    restart: always
+    volumes:
+      - ${HOME}/docker/logs/userservice:/var/log
+      - ${HOME}/docker/userservice-volume/config:/usr/src/userservice/config
+    environment:
+      - SPRING_PROFILES_ACTIVE=local,secret
+    depends_on:
+      - postgres
+
+  authservice:
+    build:
+      context: authservice
+      dockerfile: Dockerfile
+    image: prifile/authservice
+    hostname: authservice
+    container_name: authservice
+    ports:
+      - "8082:7070"
+      - "6378:6380"
+    restart: always
+    volumes:
+      - ${HOME}/docker/logs/authservice:/var/log
+      - ${HOME}/docker/authvolume-volume/config:/usr/src/authservice/config
+    environment:
+      - SPRING_PROFILES_ACTIVE=local,secret
+    depends_on:
+      - postgres
+
+  postgres:
+    image: mdillon/postgis
+    hostname: postgres
+    container_name: postgres
+    volumes:
+      - ${HOME}/docker/init.sql:/docker-entrypoint-initdb.d/init.sql
+      - ${HOME}/docker/postgres-volume:/var/lib/postgresql/data
+    ports:
+      - "5433:5432"
+    restart: always
+    env_file:
+      - ${HOME}/docker/postgres.env
